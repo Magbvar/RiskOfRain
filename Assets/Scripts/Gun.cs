@@ -10,10 +10,21 @@ public class Gun : MonoBehaviour
     public GameObject gun;
     private bool canFire = true;
     public float fireRate = 2.5f;
-    public ParticleSystem ParticleSystem;
+    public GameObject ParticleSystem;
     public Camera Camera;
+    Animator animator;
 
     // Update is called once per frame
+
+    private void Start()
+    {
+        animator = transform.Find("FemalePlayer").GetComponent<Animator>();
+
+        if (animator == null)
+        {
+            Debug.Log("no");
+        }
+    }
     void Update()
     {
 
@@ -26,8 +37,9 @@ public class Gun : MonoBehaviour
 
     void Shoot()
     {
-
-        ParticleSystem.Play();
+        animator.SetBool("Attack", true);
+        
+        
         RaycastHit hit;
         if (Physics.Raycast(gun.transform.position, gun.transform.forward, out hit, range, ~Player))
         {
@@ -37,18 +49,25 @@ public class Gun : MonoBehaviour
             {
                 target.TakeDamage(dmg);
             }
+            
+            GameObject Impact = Instantiate(ParticleSystem, hit.point, Quaternion.LookRotation(hit.normal));
+            Destroy(Impact,0.2f);
         }
         else
         {
-            Debug.Log("Missed");
-        }       
+            Debug.Log("Missed");   
+        }
+        
         StartCoroutine(FireRateHandler());
     }
 
     IEnumerator FireRateHandler()
     {
+        
         float timeToNextFire = 1 / fireRate;
         yield return new  WaitForSeconds(timeToNextFire);
+        animator.SetBool("Attack", false);
+        
         canFire = true;
     }
 }
