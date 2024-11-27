@@ -16,6 +16,7 @@ public class Enemy : MonoBehaviour
     public float speed = 5f;
     public int damage;
     private bool dmgDone;
+    bool canMove = true;
     
     private void Awake()
     {
@@ -36,9 +37,13 @@ public class Enemy : MonoBehaviour
     }
 
     private void Update()
-    {  
-        transform.LookAt(player.transform);
-        transform.position += transform.forward * speed * Time.deltaTime;
+    {
+        if (canMove == true)
+        {
+            transform.LookAt(player.transform);
+            transform.position += transform.forward * speed * Time.deltaTime;
+        }
+        
     }
   
     void OnTriggerEnter(Collider coll)
@@ -51,7 +56,7 @@ public class Enemy : MonoBehaviour
             FindObjectOfType<ScoreManager>().HealthChange(damage);
 
             dmgDone = true;
-
+            canMove = false;
             FindObjectOfType<GameManager>().EnemyUpdater(1);
 
             animator.SetBool("HasCollided", true);

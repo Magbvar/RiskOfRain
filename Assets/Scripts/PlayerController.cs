@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
     private Vector2 input;
     private CharacterController characterController;
     private Vector3 direction;
-
+    private Animator animator;
     [SerializeField] private float speed;
 
     [SerializeField] private Movement movement;
@@ -25,7 +25,8 @@ public class PlayerController : MonoBehaviour
   
     [SerializeField] private float jumpPower;
     private int numberOfJumps = 0;
-    [SerializeField] private int maxNumberOfJumps = 20;
+    [SerializeField] private int maxNumberOfJumps = 2;
+    private bool alive = true;
 
     public int Health = 20;
    
@@ -34,16 +35,21 @@ public class PlayerController : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
         mainCamera = Camera.main;
+
+        animator = transform.Find("FemalePlayer").GetComponent<Animator>();
+
+        animator.SetInteger("Health", Health);
         
     }
 
     public void Update()
     {
-        
-        ApplyRotation(); 
-        ApplyGravity();
-        ApplyMovement();
-
+        if (alive)
+        {
+            ApplyRotation();
+            ApplyGravity();
+            ApplyMovement();
+        }
     }
 
     private void ApplyGravity()
@@ -51,11 +57,13 @@ public class PlayerController : MonoBehaviour
 
         if (IsGrounded() && velocity <0)
         {
+            
             velocity = -1.0f;
         }
         else
         {
             velocity += gravity * gravityMultiplier * Time.deltaTime;
+            
         }
            
        
@@ -72,21 +80,29 @@ public class PlayerController : MonoBehaviour
     }
     public void ApplyMovement()
     {
-        var targetSpeed = movement.isSprinting ? movement.speed * movement.multiplier : movement.speed;
-        movement.currentSpeed = Mathf.MoveTowards(movement.currentSpeed, targetSpeed, movement.acceleration * Time.deltaTime);
+        
+            var targetSpeed = movement.isSprinting ? movement.speed * movement.multiplier : movement.speed;
+            movement.currentSpeed = Mathf.MoveTowards(movement.currentSpeed, targetSpeed, movement.acceleration * Time.deltaTime);
 
-        characterController.Move(direction * movement.currentSpeed * Time.deltaTime);
-
+            characterController.Move(direction * movement.currentSpeed * Time.deltaTime);
+        
     }
     public void Move(InputAction.CallbackContext context)
     {
-        input = context.ReadValue<Vector2>();
-        direction = new Vector3(input.x, 0.0f, input.y);
+        
+        
+            animator.SetBool("isMoving", true);
+            input = context.ReadValue<Vector2>();
+            direction = new Vector3(input.x, 0.0f, input.y);
+        
     }
 
     public void Jump(InputAction.CallbackContext context)
     {
-        if(!context.started) return;
+        animator.SetInteger("Jumps", numberOfJumps);
+        
+        Debug.Log(animator.GetInteger("Jumps"));
+        if (!context.started) return;
         
         if (!IsGrounded() && numberOfJumps >= maxNumberOfJumps) return;
         if (numberOfJumps == 0) StartCoroutine(WaitForLanding());
@@ -97,6 +113,7 @@ public class PlayerController : MonoBehaviour
 
     public void Sprint(InputAction.CallbackContext context)
     {
+        
         movement.isSprinting = context.started || context.performed;
     }
     private IEnumerator WaitForLanding()
@@ -107,25 +124,28 @@ public class PlayerController : MonoBehaviour
    
 
         numberOfJumps = 0;
+        animator.SetInteger("Jumps", numberOfJumps);
     }
 
     public void HealthUpdate(int hurt)
     {
         Health += hurt;
-        
+        animator.SetInteger("Health",Health);
         Debug.Log(Health);
 
         if (Health <= 0.0f)
         {
-            
-            PlayerDeath();
+            alive = false;
+
+            StartCoroutine(DieAnima());
         }
     }
 
-    public void PlayerDeath()
+    private IEnumerator DieAnima()
     {
+        yield return new WaitForSeconds(0.8f);
+
         Destroy(gameObject);
-      
     }
 
     private bool IsGrounded() => characterController.isGrounded;

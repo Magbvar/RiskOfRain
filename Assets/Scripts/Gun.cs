@@ -11,10 +11,12 @@ public class Gun : MonoBehaviour
     private bool canFire = true;
     public float fireRate = 2.5f;
     public ParticleSystem ParticleSystem;
+    public Camera Camera;
 
     // Update is called once per frame
     void Update()
     {
+
         if (Input.GetButton("Fire1") && canFire == true)
         {
             Shoot();
@@ -24,6 +26,7 @@ public class Gun : MonoBehaviour
 
     void Shoot()
     {
+
         ParticleSystem.Play();
         RaycastHit hit;
         if (Physics.Raycast(gun.transform.position, gun.transform.forward, out hit, range, ~Player))
